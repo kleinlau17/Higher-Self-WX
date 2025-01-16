@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tencent.wxcloudrun.mapper.InformationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tencent.wxcloudrun.entity.Information">
+        <id column="id" property="id" />
+        <result column="openid" property="openid" />
+        <result column="birth_date" property="birthDate" />
+        <result column="birth_time" property="birthTime" />
+        <result column="birth_place" property="birthPlace" />
+        <result column="fortune_year" property="fortuneYear" />
+        <result column="career_personality" property="careerPersonality" />
+        <result column="annual_fortune" property="annualFortune" />
+        <result column="monthly_fortune" property="monthlyFortune" />
+        <result column="career_signature" property="careerSignature" />
+        <result column="annual_summary" property="annualSummary" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, openid, birth_date, birth_time, birth_place, fortune_year, career_personality, annual_fortune, monthly_fortune, career_signature, annual_summary, create_time, update_time
+    </sql>
+
+</mapper>
