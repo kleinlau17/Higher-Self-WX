@@ -93,7 +93,8 @@ public class WxAuthController {
                 WX_AUTH_URL, APP_ID, APP_SECRET, request.getCode());
 
         try {
-            Map<String, Object> weChatResponse = restTemplate.getForObject(url, Map.class);
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            Map<String, Object> weChatResponse = response.getBody();
 
             if (weChatResponse != null && weChatResponse.containsKey("openid")) {
                 Map<String, Object> successResponse = new HashMap<>();
@@ -109,6 +110,7 @@ public class WxAuthController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("details", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
