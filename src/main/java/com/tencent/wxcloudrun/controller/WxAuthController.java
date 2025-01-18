@@ -33,56 +33,56 @@ public class WxAuthController {
     @Resource
     private InformationMapper informationMapper;
     
-    @PostMapping("/openId")
-    public ResponseEntity<?> getOpenId(@RequestBody WxAuthDTO request) {
-        String code = request.getCode();
-        
-        if (StringUtils.isEmpty(code)) {
-            return ResponseEntity.badRequest()
-                .body(Collections.singletonMap("error", "Missing code in request body"));
-        }
-        
-        // 测试用code逻辑
-        if ("testcode".equals(code)) {
-            return ResponseEntity.ok()
-                .body(Collections.singletonMap("openid", "testopenid"));
-        }
-        
-        String url = String.format("%s?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
-            WX_AUTH_URL, APP_ID, APP_SECRET, code);
-            
-        try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
-            Map<String, Object> body = response.getBody();
-            
-            if (body != null && body.containsKey("openid")) {
-                String openid = (String) body.get("openid");
-                System.out.println("openid: " + openid);
-                
-                // 查询数据库中是否存在该openid
-                QueryWrapper<Information> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("openid", openid);
-                Information info = informationMapper.selectOne(queryWrapper);
-                System.out.println("info: " + info);
-                
-                // 如果存在则返回-1，否则返回原始openid
-                String returnOpenid = (info != null) ? "-1" : openid;
-                
-                return ResponseEntity.ok()
-                    .body(Collections.singletonMap("openid", returnOpenid));
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "Failed to get openid"));
-            }
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Collections.singletonMap("error", "Internal Server Error")); 
-        }
-    }
+//    @PostMapping("/openId")
+//    public ResponseEntity<?> getOpenId(@RequestBody WxAuthDTO request) {
+//        String code = request.getCode();
+//
+//        if (StringUtils.isEmpty(code)) {
+//            return ResponseEntity.badRequest()
+//                .body(Collections.singletonMap("error", "Missing code in request body"));
+//        }
+//
+//        // 测试用code逻辑
+//        if ("testcode".equals(code)) {
+//            return ResponseEntity.ok()
+//                .body(Collections.singletonMap("openid", "testopenid"));
+//        }
+//
+//        String url = String.format("%s?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+//            WX_AUTH_URL, APP_ID, APP_SECRET, code);
+//
+//        try {
+//            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+//            Map<String, Object> body = response.getBody();
+//
+//            if (body != null && body.containsKey("openid")) {
+//                String openid = (String) body.get("openid");
+//                System.out.println("openid: " + openid);
+//
+//                // 查询数据库中是否存在该openid
+//                QueryWrapper<Information> queryWrapper = new QueryWrapper<>();
+//                queryWrapper.eq("openid", openid);
+//                Information info = informationMapper.selectOne(queryWrapper);
+//                System.out.println("info: " + info);
+//
+//                // 如果存在则返回-1，否则返回原始openid
+//                String returnOpenid = (info != null) ? "-1" : openid;
+//
+//                return ResponseEntity.ok()
+//                    .body(Collections.singletonMap("openid", returnOpenid));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Collections.singletonMap("error", "Failed to get openid"));
+//            }
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(Collections.singletonMap("error", "Internal Server Error"));
+//        }
+//    }
 
     @PostMapping("/getOpenId")
-    public ResponseEntity<Map<String, Object>> getOpenId2(@RequestBody WxAuthDTO request) {
+    public ResponseEntity<Map<String, Object>> getOpenId(@RequestBody WxAuthDTO request) {
         if (request == null || StringUtils.isEmpty(request.getCode())) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Missing code in request body");
