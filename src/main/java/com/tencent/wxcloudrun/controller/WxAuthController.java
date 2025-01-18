@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -93,7 +94,15 @@ public class WxAuthController {
                 WX_AUTH_URL, APP_ID, APP_SECRET, request.getCode());
 
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            // 创建新的RestTemplate实例并禁用SSL验证
+            RestTemplate customRestTemplate = new RestTemplate();
+            customRestTemplate.setRequestFactory(new SimpleClientHttpRequestFactory());
+            ((SimpleClientHttpRequestFactory) customRestTemplate.getRequestFactory())
+                .setConnectTimeout(5000);
+            ((SimpleClientHttpRequestFactory) customRestTemplate.getRequestFactory())
+                .setReadTimeout(5000);
+
+            ResponseEntity<Map> response = customRestTemplate.getForEntity(url, Map.class);
             Map<String, Object> weChatResponse = response.getBody();
 
             if (weChatResponse != null && weChatResponse.containsKey("openid")) {
