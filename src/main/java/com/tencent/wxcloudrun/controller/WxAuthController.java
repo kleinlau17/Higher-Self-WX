@@ -17,9 +17,10 @@ import java.util.HashMap;
 
 import com.tencent.wxcloudrun.mapper.InformationMapper;
 import com.tencent.wxcloudrun.entity.Information;
+import com.tencent.wxcloudrun.dto.WxAuthDTO;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wx")
 public class WxAuthController {
     
     private static final String APP_ID = "wx2584d463c0bb7200";
@@ -33,8 +34,8 @@ public class WxAuthController {
     private InformationMapper informationMapper;
     
     @PostMapping("/openId")
-    public ResponseEntity<?> getOpenId(@RequestBody Map<String, String> request) {
-        String code = request.get("code");
+    public ResponseEntity<?> getOpenId(@RequestBody WxAuthDTO request) {
+        String code = request.getCode();
         
         if (StringUtils.isEmpty(code)) {
             return ResponseEntity.badRequest()
@@ -81,16 +82,15 @@ public class WxAuthController {
     }
 
     @PostMapping("/getOpenId")
-    public ResponseEntity<Map<String, Object>> getOpenId2(@RequestBody Map<String, String> requestBody) {
-        if (requestBody == null || !requestBody.containsKey("code")) {
+    public ResponseEntity<Map<String, Object>> getOpenId2(@RequestBody WxAuthDTO request) {
+        if (request == null || StringUtils.isEmpty(request.getCode())) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Missing code in request body");
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
-        String code = requestBody.get("code");
         String url = String.format("%s?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
-                WX_AUTH_URL, APP_ID, APP_SECRET, code);
+                WX_AUTH_URL, APP_ID, APP_SECRET, request.getCode());
 
         try {
             Map<String, Object> weChatResponse = restTemplate.getForObject(url, Map.class);
