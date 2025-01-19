@@ -1,7 +1,6 @@
 package com.tencent.wxcloudrun.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,14 +9,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 
 import com.tencent.wxcloudrun.mapper.InformationMapper;
-import com.tencent.wxcloudrun.entity.Information;
 import com.tencent.wxcloudrun.dto.WxAuthDTO;
 
 @RestController
@@ -94,13 +97,30 @@ public class WxAuthController {
                 WX_AUTH_URL, APP_ID, APP_SECRET, request.getCode());
 
         try {
-            // 创建新的RestTemplate实例并禁用SSL验证
-            RestTemplate customRestTemplate = new RestTemplate();
-            customRestTemplate.setRequestFactory(new SimpleClientHttpRequestFactory());
-            ((SimpleClientHttpRequestFactory) customRestTemplate.getRequestFactory())
-                .setConnectTimeout(5000);
-            ((SimpleClientHttpRequestFactory) customRestTemplate.getRequestFactory())
-                .setReadTimeout(5000);
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            CloseableHttpClient httpClient = HttpClients.custom()
+                .setSslContext(sslContext)
+                .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                .build();
+
+            HttpComponentsClientHttpRequestFactory factory = 
+                new HttpComponentsClientHttpRequestFactory(httpClient);
+            factory.setConnectTimeout(5000);
+
+            RestTemplate customRestTemplate = new RestTemplate(factory);
 
             ResponseEntity<Map> response = customRestTemplate.getForEntity(url, Map.class);
             Map<String, Object> weChatResponse = response.getBody();
