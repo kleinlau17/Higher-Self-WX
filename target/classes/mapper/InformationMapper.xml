@@ -9,6 +9,9 @@
         <result column="birth_date" property="birthDate" />
         <result column="birth_time" property="birthTime" />
         <result column="birth_place" property="birthPlace" />
+        <result column="gender" property="gender" />
+        <result column="ziwei" property="ziwei" />
+        <result column="bazi" property="bazi" />
         <result column="fortune_year" property="fortuneYear" />
         <result column="career_personality" property="careerPersonality" />
         <result column="annual_fortune" property="annualFortune" />
@@ -21,7 +24,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, openid, birth_date, birth_time, birth_place, fortune_year, career_personality, annual_fortune, monthly_fortune, career_signature, annual_summary, create_time, update_time
+        id, openid, birth_date, birth_time, birth_place, gender, ziwei, bazi, fortune_year, career_personality, annual_fortune, monthly_fortune, career_signature, annual_summary, create_time, update_time
     </sql>
 
 </mapper>

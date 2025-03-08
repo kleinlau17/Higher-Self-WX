@@ -1,0 +1,27 @@
+{
+  "groups": [
+    {
+      "name": "langchain4j.deepseek.chat-model",
+      "type": "com.tencent.wxcloudrun.config.DeepseekChatModelProperties",
+      "sourceType": "com.tencent.wxcloudrun.config.DeepseekChatModelProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "langchain4j.deepseek.chat-model.api-key",
+      "type": "java.lang.String",
+      "sourceType": "com.tencent.wxcloudrun.config.DeepseekChatModelProperties"
+    },
+    {
+      "name": "langchain4j.deepseek.chat-model.base-url",
+      "type": "java.lang.String",
+      "sourceType": "com.tencent.wxcloudrun.config.DeepseekChatModelProperties"
+    },
+    {
+      "name": "langchain4j.deepseek.chat-model.model-name",
+      "type": "java.lang.String",
+      "sourceType": "com.tencent.wxcloudrun.config.DeepseekChatModelProperties"
+    }
+  ],
+  "hints": []
+}

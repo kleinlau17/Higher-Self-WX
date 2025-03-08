@@ -6,8 +6,8 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://gz-cdb-3d9ehih5.sql.tencentcdb.com:26921/underware
-    username: onebox
+    url: jdbc:mysql://10.1.12.3:3306/underwear
+    username: root
     password: 9TXMan.!g9jfv7K
     # url: jdbc:mysql://localhost:3306/onebox
     # username: root
@@ -39,7 +39,7 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值
       logic-not-delete-value: 0 # 逻辑未删除值
 langchain4j:
-  open-ai:
+  deepseek:
     chat-model:
       model-name: deepseek-chat
       base-url: https://api.deepseek.com/v1

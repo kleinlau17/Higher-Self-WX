@@ -2,11 +2,13 @@
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/dto/InformationDTO.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/service/InformationService.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/WxCloudRunApplication.java
-/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/controller/InformationController.java
-/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/mapper/InformationMapper.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/controller/WxAuthController.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/service/impl/InformationServiceImpl.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/config/ApiResponse.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/entity/Information.java
-/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/dto/CounterRequest.java
 /Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/config/MybatisPlusConfig.java
+/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/config/DeepseekChatModelProperties.java
+/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/controller/InformationController.java
+/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/mapper/InformationMapper.java
+/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/dto/WxAuthDTO.java
+/Users/liuzhikai/Documents/Code/OneBox/Higher-Self-WX/src/main/java/com/tencent/wxcloudrun/config/AiConfig.java

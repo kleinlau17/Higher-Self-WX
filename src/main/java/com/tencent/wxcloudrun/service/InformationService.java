@@ -17,5 +17,4 @@ public interface InformationService extends IService<Information> {
     Information createInformation(InformationDTO dto);
 
     Information getInformationByOpenid(InformationDTO dto);
-
 }

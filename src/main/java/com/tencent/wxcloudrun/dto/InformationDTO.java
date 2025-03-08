@@ -10,4 +10,5 @@ public class InformationDTO {
     private Date birthDate;
     private Time birthTime;
     private String birthPlace;
+    private String gender;
 }

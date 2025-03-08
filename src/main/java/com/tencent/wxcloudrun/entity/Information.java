@@ -48,6 +48,21 @@ public class Information implements Serializable {
     private String birthPlace;
 
     /**
+     * 性别
+     */
+    private String gender;
+
+    /**
+     * 紫微斗数
+     */
+    private String ziwei;
+
+    /**
+     * 生辰八字
+     */
+    private String bazi;
+
+    /**
      * 运势年份
      */
     private Integer fortuneYear;

@@ -1,4 +1,5 @@
 com/tencent/wxcloudrun/mapper/InformationMapper.class
+com/tencent/wxcloudrun/dto/WxAuthDTO.class
 com/tencent/wxcloudrun/controller/WxAuthController.class
 com/tencent/wxcloudrun/service/impl/InformationServiceImpl.class
 com/tencent/wxcloudrun/config/ApiResponse.class
@@ -6,7 +7,6 @@ com/tencent/wxcloudrun/WxCloudRunApplication.class
 com/tencent/wxcloudrun/service/InformationService.class
 com/tencent/wxcloudrun/config/MybatisPlusConfig.class
 com/tencent/wxcloudrun/entity/Information.class
-com/tencent/wxcloudrun/dto/CounterRequest.class
 com/tencent/wxcloudrun/dto/InformationDTO.class
 com/tencent/wxcloudrun/config/WebConfig.class
 com/tencent/wxcloudrun/controller/InformationController.class

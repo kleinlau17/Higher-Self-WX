@@ -9,12 +9,20 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import com.tencent.wxcloudrun.dto.InformationDTO;
+
+import java.sql.Time;
 import java.util.Calendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import cn.hutool.http.HttpUtil;
+import java.text.SimpleDateFormat;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Date;
+import cn.hutool.http.HttpRequest;
 
 /**
  * <p>
@@ -29,11 +37,14 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
 
     private static final Logger log = LoggerFactory.getLogger(InformationServiceImpl.class);
 
-    @Resource
-    private ChatLanguageModel chatLanguageModel;
+    private final ChatLanguageModel chatLanguageModel;
 
     @Resource
     private ObjectMapper objectMapper;
+
+    public InformationServiceImpl(ChatLanguageModel chatLanguageModel) {
+        this.chatLanguageModel = chatLanguageModel;
+    }
 
     @Override
     public Information createInformation(InformationDTO dto) {
@@ -42,71 +53,58 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
 
         // 设置当前年份为运势年份
         information.setFortuneYear(Calendar.getInstance().get(Calendar.YEAR));
-        
+
+        // 获取紫微斗数数据
+        try {
+            String izTroData = getIzTroData(dto);
+            information.setZiwei(izTroData);
+            log.info("成功获取紫微斗数数据: {}", izTroData);
+        } catch (Exception e) {
+            log.error("获取紫微斗数数据失败", e);
+            throw new RuntimeException("获取紫微斗数数据失败", e);
+        }
+
+        // 获取八字数据
+        try {
+            String baziData = getBaziData(dto);
+            information.setBazi(baziData);
+            log.info("成功获取八字数据: {}", baziData);
+        } catch (Exception e) {
+            log.error("获取八字数据失败", e);
+            throw new RuntimeException("获取八字数据失败", e);
+        }
+
         // 使用 ChatLanguageModel 生成运势内容
         String systemPrompt = """
+    
 # Role:
-你是一位专业的事业运势分析师，具备基于用户输入信息（如出生时间、地点）的运势分析能力，可以从多个维度（事业性格、流年运势、季度运势等）提供个性化预测和建议。
+你是一位专业的事业运势指导师，能够根据用户的生辰八字、紫微斗数等信息进行命理学分析，进而为用户提供个性化的事业运势分析及发展建议。
 
-# Core Capabilities:
-- 接收用户输入的出生日期、出生时间（可选）和出生地点，推算出生时的真太阳时。
-- 基于推算出的出生时的真太阳时推算生辰八字。
-- 基于推算出的生辰八字进行紫微斗数排盘。
-- 基于生辰八字和紫微斗数进行事业性格分析，推算去年和今年的流年事业运。
-- 提供今年每个月的详细事业运势和对应月份百分制分数分析。
-- 根据当前时间，基于梅花易数，从签文库中抽取签文。
-- 根据抽取的好运灵签，围绕用户的事业性格和流年运势，从人际关系、团队合作、自我发展等角度提供正能量的解读与建议。
-
-# Input Format:
-- 出生日期：格式为 YYYY-MM-DD
-- 出生时间：24小时制，格式为 HH:MM
-- 出生地点：城市名
-
-# Output Format:
-必须以JSON格式返回，包含以下字段：
-- career_personality: 事业性格及去年运势回顾
-- annual_fortune: 今年整体运势预测
-- monthly_fortune: 每月运势详情（包含分数和描述）
-- career_signature: 抽取的灵签内容
-- annual_summary: 基于灵签的建议总结
+# Output:
+输出必须为JSON格式，包含以下字段：
+- `career_personality`: 事业性格及2024年运势回顾（约120字）。
+- `annual_fortune`: 2025年整体事业运势预测（约120字）。
+- `monthly_fortune`: 每月运势详情，包含分数、事业运势描述和风险提示（约100字）。
+- `career_signature`: 从好运信号库中抽取的好运信号（verse）。
+- `annual_summary`: 根据好运信号、事业性格及流年运势，提供正能量建议（约200字）。
 
 # Workflow:
-1. 接收用户输入
-   用户输入出生日期、出生时间（可选）和出生地点，作为分析的基础数据。
+1. 接收用户输入（生辰八字、紫微斗数、当前时间）。
+2. 事业性格分析：结合生辰八字和紫微斗数，分析用户的事业性格及适合的发展方向。
+3. 流年事业运预测：概述2024年与2025年的事业运势，并推算整体流年事业运。
+4. 每月事业运势分析：按月给出事业运势分数和正能量建议。
+5. 抽取好运信号：基于梅花易数从好运信号库中抽取一条适配的好运信号。
+6. 事业建议总结：结合好运信号、事业性格和流年运势，为用户提供关于人际关系、团队合作和自我发展的建议。
+7. 输出JSON格式的结果。
 
-2. 推算真太阳时
-   根据用户输入的出生时间与地点，通过真太阳时转换公式，推算用户出生时的真太阳时。
+# 提示：
+- 所有运势分析及建议均保持积极正向的基调，并确保内容不受限于特定行业。
+- 请使用通俗易懂的语言，避免使用晦涩的命理术语，同时保持内容的专业性和深度。
+- 月度运势必须包含具体分数和详细描述。
+- 输出结果将以JSON格式返回，方便用户进一步使用。
+- 确保抽取的好运信号来自提供的好运信号库。
 
-3. 推算生辰八字
-   基于推算出的真太阳时，计算用户的生辰八字，为后续分析提供基础。
-
-4. 紫微斗数排盘
-   基于生辰八字，使用紫微斗数进行命宫与相关宫位的排盘，生成用户个性化的事业性格图谱。
-
-5. 事业性格分析
-   结合八字和紫微斗数分析，深入解读用户的事业性格特点，包括适合的发展方向、潜在优势与挑战。
-
-6. 推算流年事业运
-   - 输出去年流年事业运，概述用户的事业性格及其2024年事业大运。
-   - 输出今年的流年事业运，概述用户2025年事业大运的整体情况。
-
-7. 详细月度事业运势
-   - 输出逐月运势分数（百分制）。
-   - 逐月事业运情况与建议：每个月用约80字描述事业运势和正能量建议。
-
-8. 抽取好运灵签
-   根据当前时间，采用梅花易数从签文库中抽取一条好运灵签，作为用户事业发展的指引。
-
-9. 好运灵签解读与建议
-   基于抽取的灵签，结合用户的事业性格和流年运势，从以下维度提出正能量建议：
-   - 人际关系：如何维护与拓展人脉，发挥贵人助力。
-   - 团队合作：加强协作，提升团队凝聚力与执行力
-   - 自我发展：明确自身目标，提升个人能力以应对挑战。
-
-10. 输出结果
-    以 JSON 格式返回分析结果
-
-# 签文库:
+# 好运信号库:
 [
   {"number": 1, "name": "姜公封相", "verse": "灵签求得第一枝_龙虎风云际会时_一旦凌霄扬自乐_任君来往赴瑶池"},
   {"number": 2, "name": "王道真误入桃源", "verse": "枯木逢春尽发新_花香叶茂蝶来频_桃源竞斗千红紫_一叶渔舟误入津"},
@@ -132,14 +130,19 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
 
 # Example input and responding output:
 
-## Example Input
+# Input Format:
+- 生辰八字
+- 紫微斗数
+- 当前时间
+
+## Input Example
 {
-    "出生日期": "2002-11-20",
-    "出生时间": "20:30:00",
-    "出生地": "广东省深圳市南山区"
+    "生辰八字": "（具体数据）",
+    "紫微斗数": "（具体数据）",
+    "当前时间": "19:30:00"
 }
 
-## Example Output
+## Output Format
 {
     "career_personality": "去年流年事业运，概述用户的事业性格及其2024年事业大运（约120字，带有回顾的意味）",
     
@@ -148,47 +151,69 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
     "monthly_fortune": {
         "January": {
             "score": 87,
-            "fortune": "约80字描述月度事业运势及建议，语言基调为正能量。"
+            "fortune": "约100字描述月度事业运势及建议，语言基调为正能量。"
         },
         "February": {
             "score": 90,
-            "fortune": "约80字描述月度事业运势及建议，语言基调为正能量。"
+            "fortune": "约100字描述月度事业运势及建议，语言基调为正能量。"
         },
         [... 其他月份省略 ...]
         "December": {
             "score": 70,
-            "fortune": "约80字描述月度事业运势及建议，语言基调为正能量。"
+            "fortune": "约100字描述月度事业运势及建议，语言基调为正能量。"
         }
     },
     
-    "career_signature": "根据当前时间，采用梅花易数从签文库中抽取的签文（verse）",
+    "career_signature": "根据当前时间，采用梅花易数从好运信号库中抽取的好运信号（verse）",
     
-    "annual_summary": "结合灵签内容和事业性格与流年运势，从人际关系、团队合作、自我发展等维度提供约200字的正能量建议。"
+    "annual_summary": "结合好运信号内容和事业性格与流年运势，从人际关系、团队合作、自我发展等维度提供正能量建议。并以钩子文案收尾，引导用户主动加强自我探索，深入了解自己的事业性格。整段输出约200字。"
 }
 
-# Remember:
-- 输出必须严格遵循JSON格式
-- 所有预测和建议都应保持积极正面的基调
-- 月度运势必须包含具体分数和详细描述
-- 确保抽取的灵签来自提供的签文库
-""";
-        
-        String userPrompt;
-        if (dto.getBirthTime() != null) {
-            userPrompt = String.format("接下来请根据以下信息生成运势：出生日期：%s，出生时间：%s，出生地点：%s",
-                dto.getBirthDate(), dto.getBirthTime(), dto.getBirthPlace());
-        } else {
-            userPrompt = String.format("接下来请根据以下信息生成运势：出生日期：%s，出生地点：%s",
-                dto.getBirthDate(), dto.getBirthPlace());
+## Output Example
+{
+    "career_personality": "过去的一年你始终面对着外部环境波橘云诡的变化，犹如滔天风浪里的夜航船。在这个充满变化的时代里，我们试图去寻找确定性与安全感。但如果你不松开紧握的拳头，又怎么能接纳命运新的馈赠呢？",
+    
+    "annual_fortune": "请以全新的你迎接属于你的精彩吧！拥抱变化将会是这一年的主旋律。你可以去到新的环境、尝试不同的方向、开拓新的业务。不要害怕蹒跚的起步，开端总是不完美的，能通向目的地就足够了。",
+    
+    "monthly_fortune": {
+        "January": {
+            "score": 77,
+            "fortune": "你会收到一些新的机会，但对你来说并没有足够的吸引力。不要就此灰心，继续保持足够的外部连接与信息搜集，合适的机会离你并不远。"
+        },
+        "February": {
+            "score": 90,
+            "fortune": "你会真切地感到一种推背感，仿佛有无形的力量将你牵引至高处。继续保持谦卑和低调，空的容器才能容纳更多。有时，幸福者避让原则是对你的保护。"
+        },
+        [... 其他月份省略 ...]
+        "December": {
+            "score": 65,
+            "fortune": "也许你会面临外部的质疑和挑战，身边不怀好意的试探和流言蜚语。不要害怕，有时闭上眼睛和耳朵是对自己的保护。保持足够的定力，当旋风停止，你才能看清真相。"
         }
-        
-        String fortune = chatLanguageModel.generate(systemPrompt + "\n" + userPrompt);
+    },
+    
+    "career_signature": "根据当前时间，采用梅花易数从好运信号库中抽取的好运信号（verse）",
+    
+    "annual_summary": "2025年上半年需要注意身体健康与人际关系，学会在复杂的处境中养护自己的身心，切莫陷入无所谓的消耗当中。挖掘自己做某些事毫不费力的天赋才华，了解自己的事业性格，为下半年即将到来的新机会做好准备。许多时候，事情远没有你想象中复杂。"
+}
+
+        """;
+
+        // 获取当前时间
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        String currentTime = timeFormat.format(new Date());
+
+        String userPrompt = String.format("接下来请根据以下信息生成内容：\n 生辰八字：%s\n 紫微斗数：%s\n 当前时间：%s",
+                information.getBazi(), information.getZiwei(), currentTime);
+
+        String response = chatLanguageModel.generate(systemPrompt + "\n" + userPrompt);
+
+        log.info("API原始响应：{}", response); // 调试用，正式环境可改为trace级别
 
         try {
             // 处理返回的文本，提取JSON内容
-            String jsonContent = fortune;
-            if (fortune.startsWith("```json")) {
-                jsonContent = fortune.substring(fortune.indexOf('{'), fortune.lastIndexOf('}') + 1);
+            String jsonContent = response;
+            if (response.startsWith("```json")) {
+                jsonContent = response.substring(response.indexOf('{'), response.lastIndexOf('}') + 1);
             }
 
             // 解析JSON响应
@@ -205,10 +230,10 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
             if (!"testopenid".equals(dto.getOpenid())) {
                 save(information);
             }
-            
+
         } catch (JsonProcessingException e) {
-            log.error("解析运势JSON失败", e);
-            throw new RuntimeException("解析运势失败", e);
+            log.error("JSON解析失败，原始响应：{}", response, e);
+            throw new RuntimeException("运势内容生成异常", e);
         }
 
         return information;
@@ -217,11 +242,104 @@ public class InformationServiceImpl extends ServiceImpl<InformationMapper, Infor
     @Override
     public Information getInformationByOpenid(InformationDTO dto) {
         log.info("Getting information for openid: {}", dto.getOpenid());
-        
+
         // 使用 MybatisPlus 的 lambdaQuery 方法构建查询
         return this.lambdaQuery()
                 .eq(Information::getOpenid, dto.getOpenid())
                 .one();  // 获取单条记录，如果没有找到会返回 null
+    }
+
+    public String getIzTroData(InformationDTO dto) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String solarDateStr = dateFormat.format(dto.getBirthDate());
+
+            // 计算时辰索引（1-12）
+            int hour = dto.getBirthTime().toLocalTime().getHour();
+            int timeIndex = hour / 2 + 1;
+
+            String genderParam = "male".equalsIgnoreCase(dto.getGender()) ? "male" : "female";
+
+            String url = String.format(
+                "https://express-nsp5-135695-9-1336124445.sh.run.tcloudbase.com/api/iztro?solarDateStr=%s&timeIndex=%d&gender=%s",
+                solarDateStr, timeIndex, genderParam
+            );
+
+            // 发送请求并解析响应
+            String response = HttpUtil.get(url);
+            JsonNode jsonNode = objectMapper.readTree(response);
+
+            // 只返回content字段的内容
+            return jsonNode.get("content").asText();
+
+        } catch (Exception e) {
+            log.error("获取紫微斗数数据异常 参数：{}", dto, e);
+            throw new RuntimeException("紫微斗数排盘服务调用失败", e);
+        }
+    }
+
+    public String getBaziData(InformationDTO dto) {
+        try {
+            String appcode = "9378c5c5e01f479e8046a564f0c16acf";
+            String url = "https://jisubazi.market.alicloudapi.com/bazi/paipan";
+            
+            Map<String, Object> paramMap = new HashMap<>();
+            paramMap.put("city", dto.getBirthPlace());
+            paramMap.put("year", getYearFromDate(dto.getBirthDate()));
+            paramMap.put("month", getMonthFromDate(dto.getBirthDate()));
+            paramMap.put("day", getDayFromDate(dto.getBirthDate()));
+            paramMap.put("hour", getHourFromTime(dto.getBirthTime()));
+            paramMap.put("minute", getMinuteFromTime(dto.getBirthTime()));
+            paramMap.put("sex", "male".equalsIgnoreCase(dto.getGender()) ? "1" : "0");
+            paramMap.put("name", "用户");
+            paramMap.put("islunar", "0");
+            paramMap.put("istaiyang", "0");
+
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "APPCODE " + appcode);
+            headers.put("Content-Type", "application/json; charset=UTF-8");
+
+            String response = HttpRequest.get(url)
+                .form(paramMap)
+                .timeout(5000)
+                .addHeaders(headers)
+                .execute()
+                .body();
+                
+            JsonNode jsonNode = objectMapper.readTree(response);
+            return jsonNode.get("result").toString();
+            
+        } catch (Exception e) {
+            log.error("获取八字数据异常 参数：{}", dto, e);
+            throw new RuntimeException("八字排盘服务调用失败", e);
+        }
+    }
+
+    // 辅助方法
+    private int getYearFromDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return cal.get(Calendar.YEAR);
+    }
+
+    private int getMonthFromDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return cal.get(Calendar.MONTH) + 1;
+    }
+
+    private int getDayFromDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return cal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private int getHourFromTime(Time time) {
+        return time.toLocalTime().getHour();
+    }
+
+    private int getMinuteFromTime(Time time) {
+        return time.toLocalTime().getMinute();
     }
 
 }
